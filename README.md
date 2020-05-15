@@ -1,20 +1,19 @@
 # Unravelling intratumor heterogeneity in relapsed/refractory multiple myeloma (RRMM) using somatic variants in mitochondrial DNA
 
 ----
-***Author:*** Moritz Przybilla
+**Author:** Moritz Przybilla
 
 ----
 
-***E-mail:*** przybilla@stud.uni-heidelberg.de
+**E-mail:** przybilla@stud.uni-heidelberg.de
+**E-mail:** m.przybilla@dkfz-heidelberg.de
 
 ----
 
-## Introduction (from ASH Abstract 2019)
-
-Multiple myeloma (MM) is a heterogeneous malignancy of clonal plasma cells that accumulate in the bone marrow (BM). Despite new treatment approaches, in most patients treatment-resistant subclones are selected by therapy, resulting in the development of refractory disease. While the subclonal architecture in newly diagnosed patients has been investigated in great detail, intra-tumor heterogeneity in relapsed/refractory (RR) MM is poorly characterized. Recent technological advances provide the opportunity to analyze tumor samples at single-cell (sc) level with high accuracy and througput. Here, we present a pilot study for an integrative analysis of sc Assay for Transposase-Accessible Chromatin with high-throughput sequencing (scATAC-seq) and scRNA-seq with the aim to comprehensivly study the regulatory landscape, gene expression, and evolution of individual subclones in RRMM patients.
+## Introduction (to be updated)
 
 ----
-## Mitochondrial DNA
+## Mitochondrial DNA (to be updated)
 
 The foundation for the following approach was layed by two different studies, which investigated the possibility of using somatic mutation in the mitochondrial genome to infer lineages in cancer-unrelated and related context. *Ludwig et al.* (Cell, 2019) and *Xu et al.* (eLife, 2019) thereby leveraged a combination of bulk and single-cell (sc) sequencing in order to determine these variants. Recent studies have shown that mitochondrial DNA (mtDNA) has improtant properties, which allow the usage as a "tracking device" of the cancer evolution.
 
@@ -34,214 +33,306 @@ Most of these facts were derived from a big mtDNA genomics study in the context 
 Ludwig et al., as well as others, made use of the fact, that the mitochondrial genome is captured within conventional assay for transposase accessible chromatin (ATAC)- and RNA-sequencing, thus delivering this information ‘for free’ 4,7. Importantly, each mitochondrion in a cell holds its own, circular, intron-free mtDNA, comprising only 16.5 kb in size, with the number of mitochondria per cell sometimes exceeding 10,000. Due to that, the coverage with which the mtDNA is captured, is sufficiently higher than the target sequencing depth of nuclear DNA 4,6,8. While the increased coverage in theory allows highly confident mutation calls, Ludwig et al.’s approach involved the joint bulk ATAC-seq and single cell RNA-seq (scRNA-seq) profiling of the mitochondrial genome. In general, bulk ATAC-seq was used first in order to determine a ‘pool’ of somatic mutations, representing the ‘ground truth’. Subsequently, scRNA-seq was used to infer different lineages carrying mutations present in this ‘pool’ of variants.
 
 ----
-## Whole-genome sequencing (WGS)
 
-The results from the study indicated above provide evidence that WGS provides a much deeper coverage of the mitochondrial genome than enriched sequencing methods like WES (*Ju et al.*, 2014, eLife). In theory, the coverage of the nuclear genome translates to the coverage of the mtDNA by approximately 100 times more (e.g. 30x coverage refers to approximately 3000x mtDNA coverage). In contrast to that, Ju et al. reported a low average coverage of mtDNA (92x) for a number of 971 samples which underwent WES (*Ju et al.*, 2014, eLife). Thus, we will use WGS to determine the somatic variants present in the *pool*, from which we can then infer lineages.
+## Mitochondrial workflow
 
-### Workflow
+## Bulk Genotyping
 
-In order to call variants within the mtDNA, we are using a previously developed script from *Na Cai*, who kindly shared it with us. The script is based on the availability of standard bam files containing all sequencing reads from WGS. The adapted version of Na's script can be found here:
+In order to call variants within the mtDNA in bulk WGS, we are using a previously written script from *Na Cai*, who kindly shared it with us. The script is based on the availability of standard bam files containing all sequencing reads from WGS (both for nuclear and mitochondrial genome). The adapted version of Na's script can be found here:
 
-    /home/przybilm/bsub_commands/src/mtdna_preprocessing_variantcalling_MP.sh
+```bash
+# file path to bash script
+/home/przybilm/bsub_commands/src/mtdna_preprocessing_variantcalling_MP.sh
+```
 
 For detailed information on the pre-processing and variant calling, please refer to the documentation within the script. In brief, extraction of MT reads from the original bam files is performed first (samtools), with subsequent remapping (picard) including splitting of paired end reads, map to an alternative mitochondrial reference genome (bwa) with trimming of 10 bases at the ends as well as sorting and indexing (samtools). For each step, an output path is specified, guiding the reader to the data which I produced.
 
-##### ***Step 1***
+### **Step 1**
 
-To use the scripts a conda environment with the respective tools was installed on the odcf-cluster. To implement all steps of the pipeline, the availability of a tab-delimited file with <sampleID> and <path to bam> is mandatory. The file was generated using an R script present within the following folder.
+To use the script, a conda environment with the respective tools was installed on the odcf-cluster. To implement all the following steps, the availability of a tab-delimited file with <sampleID> and <path to bam> is mandatory. The file was generated using an R script present within the following folder.
 
-    /home/przybilm/bsub_commands/WGS/step1/get_sampleSheet.R
+```bash
+# file path to an example script for generating a samplesheet
+~/mtdna_pipeline/R/get_sampleSheet.R
+```
 
-***Output***:
+**Output**:
 
-    /icgc/dkfzlsdf/analysis/B260/projects/przybilm/bamlist.txt
+```bash
+# the bamfile should be generated in your working directory
+~/working_dir/bamlist.txt
+```
 
-##### ***Step 2***
+This will look like this:
 
-Following this, ***step2*** of Na's script can be executed. The resulting bash script was submitted to the odcf-cluster using the following script.
+```bash
+# example for a tab-delimited bamlist.txt file
+K08K-1KAD5P_control1    /icgc/dkfzlsdf/project/hipo2/hipo_K08K/sequencing/whole_genome_sequencing/view-by-pid/K08K-1KAD5P/control1/paired/merged-alignment/control1_K08K-1KAD5P_merged.mdup.bam
+K08K-1KAD5P_tumor1  /icgc/dkfzlsdf/project/hipo2/hipo_K08K/sequencing/whole_genome_sequencing/view-by-pid/K08K-1KAD5P/tumor1/paired/merged-alignment/tumor1_K08K-1KAD5P_merged.mdup.bam
+K08K-1KAD5P_tumor2  /icgc/dkfzlsdf/project/hipo2/hipo_K08K/sequencing/whole_genome_sequencing/view-by-pid/K08K-1KAD5P/tumor2/paired/merged-alignment/tumor2_K08K-1KAD5P_merged.mdup.bam
+K08K-1XZHPL_tumor1  /icgc/dkfzlsdf/project/hipo2/hipo_K08K/sequencing/whole_genome_sequencing/view-by-pid/K08K-1XZHPL/tumor1/paired/merged-alignment/tumor1_K08K-1XZHPL_merged.mdup.bam
+```
 
-    /home/przybilm/bsub_commands/WGS/step2/mtdna_bams.sh
+### **Step 2**
 
-***Output folder***:
+Following this, **step 2** of Na's script can be executed. Within this step, all reads mapping to the mitochondrial genome will be extracted and stored as a per-sample bam file.
 
-    /icgc/dkfzlsdf/analysis/B260/projects/przybilm/rawMTbams/
+**Output folder**:
 
-***add information about the coverage plots here***
+```bash
+# example output folder
+~/working_dir/rawMTbams/
+```
 
-##### ***Step 3***
+The output folder will look like this:
 
-In ***step3***, remapping and trimming of the mtDNA reads is performed and implemented as described before. The respective script can be found using this path.
+```bash
+# example output folder
+-rw-r--r--. 1 przybilm B260  79619744 Aug 12  2019 K08K-1KAD5P_control1.mt.bam
+-rw-r--r--. 1 przybilm B260      1224 Aug 12  2019 K08K-1KAD5P_control1.mt.bam.bai
+-rw-r--r--. 1 przybilm B260 115155002 Aug 12  2019 K08K-1KAD5P_tumor1.mt.bam
+-rw-r--r--. 1 przybilm B260      1352 Aug 12  2019 K08K-1KAD5P_tumor1.mt.bam.bai
+-rw-r--r--. 1 przybilm B260 110552790 Aug 12  2019 K08K-1KAD5P_tumor2.mt.bam
+-rw-r--r--. 1 przybilm B260      1352 Aug 12  2019 K08K-1KAD5P_tumor2.mt.bam.bai
+```
 
-    /home/przybilm/bsub_commands/WGS/step3/picard.sh
+### **Step 3**
 
-At this point, the **alternative reference sequence** has to be used. All the respective files can be found following the following path.
+In **step 3**, remapping and trimming of the mtDNA reads is performed and implemented.
 
-    /icgc/dkfzlsdf/analysis/B260/projects/przybilm/REFs/
+At this point, the **alternative reference sequence** has to be used. All the respective reference files can be found following the following path.
 
-***Output folder***:
+```bash
+# this is the folder where the reference sequence etc. is stored
+~/mtdna_pipeline/REFs/
+```
 
-    /icgc/dkfzlsdf/analysis/B260/projects/przybilm/MTfastq/
+In contrast to the other steps, this one will create two output folders. One with the fastq files and a second one with sorted mitochondrial bam files.
 
-##### ***Step 4***
+**Output folder**:
 
-In ***step4***, filtering of the remapped bam files containing mtDNA reads only, is performed using ngsutils and samtools.
+```bash
+# example output folder for the raw fastq files (MT reads only)
+~/working_dir/MTfastq/
 
-    /home/przybilm/bsub_commands/WGS/step4/mtDNA_filter.sh
+# example output folder for the sorted mt bam files
+~/working_dir/MTremapped
+```
 
-***Output folder***:
+The first output folder will look like this, containing distinct folders for each sample:
 
-    /icgc/dkfzlsdf/analysis/B260/projects/przybilm/filtered/
+```bash
+# example for MTfastq folder with an individual folder per sample
+drwxr-sr-x. 2 przybilm B260 214 Aug 12  2019 K08K-1KAD5P_control1
+drwxr-sr-x. 2 przybilm B260 204 Aug 12  2019 K08K-1KAD5P_tumor1
+drwxr-sr-x. 2 przybilm B260 204 Aug 12  2019 K08K-1KAD5P_tumor2
+```
 
-##### ***Step 5***
+While the second output folder will contain the mitochondrial bam files:
 
-The final pre-processing step before implementing the variant calling with GATK comprises the read group replacement. Therefore, picard is used within the following script (***step5***).
+```bash
+# example for MTremapped folder with a sorted bam file per sample
+-rw-r--r--. 1 przybilm B260  75482061 Aug 12  2019 K08K-1KAD5P_control1.mt.bam
+-rw-r--r--. 1 przybilm B260  72616735 Aug 12  2019 K08K-1KAD5P_control1.mt.sorted.bam
+-rw-r--r--. 1 przybilm B260      1032 Aug 12  2019 K08K-1KAD5P_control1.mt.sorted.bam.bai
+-rw-r--r--. 1 przybilm B260 110029564 Aug 12  2019 K08K-1KAD5P_tumor1.mt.bam
+-rw-r--r--. 1 przybilm B260 105424750 Aug 12  2019 K08K-1KAD5P_tumor1.mt.sorted.bam
+-rw-r--r--. 1 przybilm B260      1416 Aug 12  2019 K08K-1KAD5P_tumor1.mt.sorted.bam.bai
+-rw-r--r--. 1 przybilm B260 105224513 Aug 12  2019 K08K-1KAD5P_tumor2.mt.bam
+-rw-r--r--. 1 przybilm B260 101239248 Aug 12  2019 K08K-1KAD5P_tumor2.mt.sorted.bam
+-rw-r--r--. 1 przybilm B260      1304 Aug 12  2019 K08K-1KAD5P_tumor2.mt.sorted.bam.bai
+```
 
-    /home/przybilm/bsub_commands/WGS/step5/ReplaceReads.sh
+### **Step 4**
 
-***Output folder***:
+In **step 4**, filtering of the remapped bam files containing mtDNA reads only, is performed using ngsutils and samtools.
 
-    /icgc/dkfzlsdf/analysis/B260/projects/przybilm/filtered_unique_rg/
+**Output folder**:
 
-After performance of ***step1*** - ***step5***, we are ready to perform variant calling of homoplasmic (over 90% VAF) and heteroplasmic variants (below 90% VAF).
+```bash
+# example output folder for the filtered bam files
+~/working_dir/filtered/
+```
 
+The output folder will look like this, containing distinct files for each sample:
 
-***add information about the coverage plots here***
+```bash
+# example for filtered folder with a filtered bam file per sample
+-rw-r--r--. 1 przybilm B260  57627898 Aug 12  2019 K08K-1KAD5P_control1.filtered.bam
+-rw-r--r--. 1 przybilm B260       152 Aug 12  2019 K08K-1KAD5P_control1.filtered.bam.bai
+-rw-r--r--. 1 przybilm B260  70978143 Aug 12  2019 K08K-1KAD5P_control1.samfiltered.bam
+-rw-r--r--. 1 przybilm B260       264 Aug 12  2019 K08K-1KAD5P_control1.samfiltered.bam.bai
+-rw-r--r--. 1 przybilm B260  87235933 Aug 12  2019 K08K-1KAD5P_tumor1.filtered.bam
+-rw-r--r--. 1 przybilm B260       152 Aug 12  2019 K08K-1KAD5P_tumor1.filtered.bam.bai
+-rw-r--r--. 1 przybilm B260 103561583 Aug 12  2019 K08K-1KAD5P_tumor1.samfiltered.bam
+-rw-r--r--. 1 przybilm B260       424 Aug 12  2019 K08K-1KAD5P_tumor1.samfiltered.bam.bai
+-rw-r--r--. 1 przybilm B260  80028006 Aug 12  2019 K08K-1KAD5P_tumor2.filtered.bam
+-rw-r--r--. 1 przybilm B260       152 Aug 12  2019 K08K-1KAD5P_tumor2.filtered.bam.bai
+-rw-r--r--. 1 przybilm B260  99049175 Aug 12  2019 K08K-1KAD5P_tumor2.samfiltered.bam
+-rw-r--r--. 1 przybilm B260       328 Aug 12  2019 K08K-1KAD5P_tumor2.samfiltered.bam.bai
+```
 
+### **Step 5**
 
-#### Homoplasmic variant calling (**step6**)
+The final pre-processing step before implementing the variant calling with GATK comprises the read group replacement. To do so, picard is used within the following script (**step 5**).
+
+**Output folder**:
+
+```bash
+# example output folder for the filtered bam files with replaced read groups
+~/working_dir/filtered_unique_rg/
+```
+
+```bash
+# example for filtered_unique_rg folder with the final bam file per sample
+-rw-r--r--. 1 przybilm B260       152 Aug 13  2019 K08K-1KAD5P_control1.bai
+-rw-r--r--. 1 przybilm B260  59658246 Aug 13  2019 K08K-1KAD5P_control1.bam
+-rw-r--r--. 1 przybilm B260       152 Aug 13  2019 K08K-1KAD5P_tumor1.bai
+-rw-r--r--. 1 przybilm B260  90111766 Aug 13  2019 K08K-1KAD5P_tumor1.bam
+-rw-r--r--. 1 przybilm B260       152 Aug 13  2019 K08K-1KAD5P_tumor2.bai
+-rw-r--r--. 1 przybilm B260  82743741 Aug 13  2019 K08K-1KAD5P_tumor2.bam
+```
+
+After we implemented **step1** to **step5**, we are finally ready to perform variant calling of homoplasmic (over VAF ≥ 90%) and heteroplasmic variants (VAF < 90%) within the following steps of the pipeline.
+
+### Homoplasmic variant calling (**Step 6**)
 
 For calling homoplasmic variants, GATK is used. In this case, we leverage [HaplotypeCaller](https://software.broadinstitute.org/gatk/documentation/article?id=11068) to determine the variants.
 
-    /home/przybilm/bsub_commands/WGS/step6/HaplotypeCaller.sh
+**Output folder**:
 
-***Output folder***:
+```bash
+# example output folder for the homoplasmic variants
+~/working_dir/gatk/gvcfs/
+```
 
-    /icgc/dkfzlsdf/analysis/B260/projects/przybilm/gatk/gvcfs/
+```bash
+# example output folder for the homoplasmic variants containing an vcf file per sample
+-rw-r--r--. 1 przybilm B260 5319 Aug 13  2019 K08K-1KAD5P_control1.g.vcf.gz
+-rw-r--r--. 1 przybilm B260  124 Aug 13  2019 K08K-1KAD5P_control1.g.vcf.gz.tbi
+-rw-r--r--. 1 przybilm B260 5407 Aug 13  2019 K08K-1KAD5P_tumor1.g.vcf.gz
+-rw-r--r--. 1 przybilm B260  124 Aug 13  2019 K08K-1KAD5P_tumor1.g.vcf.gz.tbi
+-rw-r--r--. 1 przybilm B260 5406 Aug 13  2019 K08K-1KAD5P_tumor2.g.vcf.gz
+-rw-r--r--. 1 przybilm B260  123 Aug 13  2019 K08K-1KAD5P_tumor2.g.vcf.gz.tbi
+```
 
-After running the first part of the variant calling, we consolidate all variants present in the different samples. Therefore, we need to create a genomedb.list file, which is a tab delimited file with <sample ID> <full path to corresponding .g.vcf.gz>. The result is an allsamples.biallelicscnps.vcf.gz file.
+After running the first part of the variant calling, we consolidate all variants present in the different samples. Therefore, we need to create a `genomedb.list` file, which is a tab delimited file with <sample ID> <full path to corresponding .g.vcf.gz>.
 
-    /home/przybilm/bsub_commands/WGS/step6/make_genomedbList.R
+```bash
+# file path to the make_genomedblist script
+~/mtdna_pipeline/R/make_genomedbList.R
+```
 
-***Output folder***:
+The output will be in .vcf.gz format which can be investigated using `less myfile.vcf.gz`. In particular, the resulting file will be called `allsamples.biallelicscnps.vcf.gz`. For further information about the vcf format, please have a look at the respective page from the [BroadInstitute](https://gatkforums.broadinstitute.org/gatk/discussion/1268/what-is-a-vcf-and-how-should-i-interpret-it).
 
-    /icgc/dkfzlsdf/analysis/B260/projects/przybilm/gatk/
+### Heteroplasmic variant calling (**step 7**)
 
-The output will be in .vcf.gz format which can be investigated using ``` $ less myfile.vcf.gz```. For further information about the vcf format, please have a look at the respective page from the [BroadInstitute](https://gatkforums.broadinstitute.org/gatk/discussion/1268/what-is-a-vcf-and-how-should-i-interpret-it).
+The most interesting step of the WGS workflow comprises the determination of heteroplasmic variants in the samples of interest. To do so, we leverage a publicly available tool, called [mtdnaserver](https://github.com/seppinho/mutserve), which is designed to exactly determine somatic mutations in the mitchondrial genome. As we know that the coverage in our multiple myeloma samples is very high, we run mtdnaserver with a low cuf-off of VAF = 0.1%.
 
-#### Heteroplasmic variant calling (**step7**)
+**Output folder**:
 
-##### mtdnaserver
+```bash
+# example output folder for the heteroplasmic variants
+~/working_dir/mtdnaserver/
+```
 
-The most interesting step of the WGS workflow comprises the determination of heteroplasmic variants in the samples of interest. To do so, we leverage a publicly available tool, called [mtdnaserver](https://github.com/seppinho/mutserve), which is designed to exactly determine somatic mutations in the mitchondrial genome. Although we know that the coverage was very high, we run mtdnaserver with different cutoffs, thus being able to capture most of the mutations. In the following scripts we use a conventional (1%), low (0.1%) and zero (0%) as argument.
+The output folder content will look like this:
 
+```bash
+# example output folder for the heteroplasmic variants containing an vcf, as well as txt files per sample
+-rw-r--r--. 1 przybilm B260    3147 Aug 14  2019 K08K-1KAD5P_all.var.txt
+-rw-r--r--. 1 przybilm B260    3914 Aug 13  2019 K08K-1KAD5P_control1.txt
+-rw-r--r--. 1 przybilm B260    1088 Aug 13  2019 K08K-1KAD5P_control1.vcf.gz
+-rw-r--r--. 1 przybilm B260 4539471 Aug 13  2019 K08K-1KAD5P_control1_raw.txt
+-rw-r--r--. 1 przybilm B260    2501 Aug 13  2019 K08K-1KAD5P_tumor1.txt
+-rw-r--r--. 1 przybilm B260     905 Aug 13  2019 K08K-1KAD5P_tumor1.vcf.gz
+-rw-r--r--. 1 przybilm B260 4637307 Aug 13  2019 K08K-1KAD5P_tumor1_raw.txt
+-rw-r--r--. 1 przybilm B260    2182 Aug 13  2019 K08K-1KAD5P_tumor2.txt
+-rw-r--r--. 1 przybilm B260     869 Aug 13  2019 K08K-1KAD5P_tumor2.vcf.gz
+-rw-r--r--. 1 przybilm B260 4288156 Aug 13  2019 K08K-1KAD5P_tumor2_raw.txt
+```
 
-    /home/przybilm/bsub_commands/WGS/step7/mtdnaserver/variantcalling.sh
-    /home/przybilm/bsub_commands/WGS/step7/mtdnaserver/variantcalling_lowVAF.sh
-    /home/przybilm/bsub_commands/WGS/step7/mtdnaserver/variantcalling_zeroVAF.sh
+Within the final step of the `mtdna_preprocessing_variantcalling.sh` script, we will again combine all variants together in a file. This will create an `all.var.txt` file, which will look like this:
 
-***Output folder***:
+```bash
+ID	Pos	Ref	Variant	VariantLevel	MajorBase	MajorLevel	MinorBase	MinorLevel	Coverage	Type
+K08K-1KAD5P_control1	2706	A	G	1.00	G	0.00	-	0.00	8802	1
+K08K-1KAD5P_control1	1438	A	G	1.00	G	0.00	-	0.00	9158	1
+K08K-1KAD5P_control1	720	T	C	0.009	T	0.99	C	0.009	6786	2
+K08K-1KAD5P_control1	750	A	G	0.999	G	0.00	-	0.00	6801	1
+K08K-1KAD5P_control1	72	T	A	0.999	A	0.00	-	0.00	1190	1
+K08K-1KAD5P_control1	2539	A	C	0.001	A	0.999	C	0.001	8599	2
+K08K-1KAD5P_control1	1245	T	C	0.002	T	0.998	C	0.002	8891	2
+K08K-1KAD5P_control1	3777	T	C	0.002	T	0.998	C	0.002	7953	2
+K08K-1KAD5P_control1	16189	T	C	0.001	T	0.998	C	0.001	6166	2
+```
 
-    /icgc/dkfzlsdf/analysis/B260/projects/przybilm/mtdnaserver/
+This is the end of the `mtdna_preprocessing_variantcalling.sh` script. From this point, we will need to prepare the output of the heteroplasmic variant calling for the single-cell genotyping. In order to perform this step, it is crucial to perform variant filtering. Importantly, we do not want to investigate uninformative germline variants.
 
-After calling the somatic variants, the raw output was filtered according to the VAF in control and tumor samples. Therefore, a custom R script was used.
+### Filtering heteroplasmic variant calls
 
-   /home/przybilm/bsub_commands/WGS/mtdnaserver/filtering_mtdnaserver_control-tumor-filter.R
+After calling the heteroplasmic (somatic) variants, we will filter the outputs according to the VAF in control and tumor samples. Therefore, a custom R script was used. It should be noted, that this step is very much dependent on the manual examination of your variant call results. In theory, you can write your own scripts to filter these outputs and customize it to your needs.
 
-To get a dataset to work with, 5% FDR were applied to mutations called for the tumor, while similarly 1% FDR were applied to the controls of the output from the low VAF variant calling. The respective dataframe was subsetted into patient-specific mutation files.
+```bash
+# file path to the filtering script with a normal reference
+~/mtdna_pipeline/R/mtdna_var_filtering.R
+```
 
-    /icgc/dkfzlsdf/analysis/B260/projects/przybilm/mtdnaserver/filtered/lowVAF/
+To get a dataset to work with, we assume that variants with a VAF ≤ 5% in the control could still be wrongly detected, while similarly it could still be present in the tumor with VAF ≥ 0.5%. This is really much a way to increase the number fo variants, potentially being valuable for lineage tracing. This is neither very sophisticated, nor precise. However, it is very important anyway that you investigate your data, and eventually also check within IGV, whether your mutation calls are valid.
 
-These files were used as reference for cellSNP mode1.
+```bash
+# example output folder for the filtered heteroplasmic variants
+~/working_dir/mtdnaserver/filtered/
+```
 
+The output from this script will be a patient-specific file with all the distinct variants from individual samples. Note, that the filtering thresholds will also be indicated in the file name (control_VAF ≤ 5%; tumor_VAF ≥ 0.5%).
 
-***add information about the plots here***
+```bash
+# example output folder for the filtered heteroplasmic variants with a variant txt file per sample
+-rw-r--r--. 1 przybilm B260    346 Aug 14  2019 1KAD5P_0.05_0.005_filtered.var.txt
+-rw-r--r--. 1 przybilm B260    598 Aug 14  2019 37HWC4_0.05_0.005_filtered.var.txt
+-rw-r--r--. 1 przybilm B260    636 Aug 14  2019 41R2SE_0.05_0.005_filtered.var.txt
+```
 
+These files will have the following format (tab-delimited):
 
-##### mutect2
+```bash
+Mutation    K08K.1KAD5P_control1_VariantLevel   K08K.1KAD5P_control1_Coverage   K08K.1KAD5P_tumor1_VariantLevel K08K.1KAD5P_tumor1_Coverage K08K. 1KAD5P_tumor2_VariantLevel    K08K.1KAD5P_tumor2_Coverage
+10946:A:C       0.005   3870    0.006   6567    0.005   4551
+12705:C:T       0.005   9587    0.003   15404   0.005   13280
+2701:G:A        0       0       0.993   12992   0.706   11921
+8280:A:C        0       0       0       0       0.007   1209
+```
 
-As an alternative to mtdnaserver, [mutect2](https://software.broadinstitute.org/gatk/documentation/tooldocs/3.8-0/org_broadinstitute_gatk_tools_walkers_cancer_m2_MuTect2.php) was used for somatic variant calling. Therefore, a list of matched control and tumor samples was produced and mutect2 was run submitting the following script.
+In addition, the script mentioned above will create a `all_patient_0.05_0.005_filtered.var.txt`, that will contain
 
-    /home/przybilm/bsub_commands/WGS/step7/mutect2/MuTect2.sh
+### Convert txt files to vcf files
 
-***Output folder***:
+In the very last step for the bulk sequencing analysis, we need to convert the `txt` files to `vcf` files, as they are the input for our single-cell genotyping in the second stage of this workflow. Thus, we provide a script which takes the `filtered.var.txt` generated above as input and converts them into `vcf` files. In addition, it also filters for common sequencing error resulting from changes in the mitochondrial reference genome. You can find more about these changes [here](https://www.mitomap.org/foswiki/bin/view/MITOMAP/MitoSeqs). The respective positions are found in the `REFs/chrM_REF_mutations.vcf` file and will be excluded from the final `vcf` file.
 
-    /icgc/dkfzlsdf/analysis/B260/projects/przybilm/MuTect2/
+```bash
+# file path to the filtering script with a normal reference
+~/mtdna_pipeline/R/var_txt_to_vcf.R
+```
 
-The output of mutect2 is again in vcf file format.
+Running this script will generate `filtered.var.vcf` files for each patient (samples get merged together). The output folder will comprise one file per patient.
 
-##### Mpileup
+```bash
+# example output folder for the filtered heteroplasmic variants with a variant txt file per sample
+-rw-r--r--. 1 przybilm B260  61 Feb  4 15:12 K08K-1KAD5P_0.05_0.01_filtered.var.vcf
+-rw-r--r--. 1 przybilm B260 883 Feb  4 15:12 K08K-1XZHPL_0.05_0.01_filtered.var.vcf
+-rw-r--r--. 1 przybilm B260 413 Feb  4 15:12 K08K-21Z2S9_0.05_0.01_filtered.var.vcf
+```
 
-In order to check the coverage of the called mutations with an additional method, *samtools mpileup* was used.
+Checking the files themselves, you will see this:
 
-    /home/przybilm/bsub_commands/WGS/step7/run_mpileup.sh
+```bash
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chrM	2701	.	G	A	.	.	.
+```
 
-
-***Output folder***:
-
-    /icgc/dkfzlsdf/analysis/B260/projects/przybilm/mpileup
-
+Ultimately, this is the result which will be used in the second stage of the workflow, where we will infer these *ground truth* variants in single cells.
 
 ----
-## Single-cell Assay for Transposase Accessible Chromating sequencing (sc-ATAC-seq)
 
-In the previously published literature, scATAC-seq is indicated as the method to use for the investigation of mtDNA. Thus, we first assessed mutations in this dataset. The tool EMBLEM, which was published by *Xu et al.* was made publicly available on github ([EMBLEM](https://github.com/ChangLab/EMBLEM)), which is why we preferentially use this.
-
-### EMBLEM
-
-Epigenome and Mitochondrial Barcode of Lineage from Endogeneous Mutations (EMBLEM) relies on joint bulk and scATAC-seq, which effectively enriches for mtDNA in comparison to WGS (17x higher coverage). The approach which the authors describe in their methods section is cited below:
-
-**Quote from the method section of** ***Xu et al., 2019, eLife*** **:**
-
-> **Single cell ATAC-seq data processing and mitochondrial DNA variant calling**
-> Single cell ATAC-seq were processed similarly to the bulk ATAC-seq, taking each individual cell as one sample. After cleanin the alignment, files from every single cell were merged and heteroplasmic variants were first called with the merged bam and filtered using the same criteria as bulk data. Heteroplasmic variants called from merged data or from bulk data were re-counted in each individual cell using ``` samtools -q 20 -Q 20 ```. The non-reference allele had to match the variants detected in merged or bulk data.
-
-
-> **Detection rate estimation**
-> In every single cell, if the variant allele detected in merged or bulk data were supported by any reads, it was considered positive; otherwise it was counted as zero. A binary matrix was used to present the lineage relationship among single cells and plotted as a heatmap.
-
-In general, they are using this method to infer intermediate populations in the clonal evolution of primary hematopoietic stem cells (pHSCs). They could show that a population of pHSC carry a clone with pHSC-specific mutations as well as another clone with shared mutations with leukemic stem cells (LSCs).
-
-Consequently, we will try to use the same pipeline they published on Github, starting with their [scATAC-seq pipeline](https://github.com/ChangLab/ATAC_mito_sc) for alignment and mapping as well as filtering of fastq to bam files, which shall then serve as an input for the EMBLEM pipeline to determine somatic variants in the mtDNA.
-
-
-### cellSNP
-
-Since the EMBLEM pipeline is currently not available due to missing files on Github (correspondence with Jing Xu already started), we have to consider alternative ways to call the somatic variants. Therefore, we first use Yuanhua's [cellSNP](https://github.com/huangyh09/cellSNP) which is actually made for scRNA-sequencing data, but works for scDNA data as well.
-
-We use the output from the cellranger v1.1 scATAC pipeline, which is essentially a position sorted bamfile.
-
-From these bamfiles, the mtDNA reads are extracted and saved into sample specific bams. Subsequently, those are used for the
-
-
-    /icgc/dkfzlsdf/analysis/B260/projects/przybilm/cellSNP/results/cellSNP/
-
-    /icgc/dkfzlsdf/analysis/hipo2/hipo_K08K/cellRanger-ATAC_v1.1/GRCh38/
-
-
-### monovar
-
-[monovar](https://bitbucket.org/hamimzafar/monovar/src/master/)
-
-
-## Single-cell RNA sequencing (sc-RNA-seq)
-
-Cellranger output
-    /icgc/dkfzlsdf/analysis/hipo2/hipo_K43R/cellranger_results_v3_GRCh38
-    /icgc/dkfzlsdf/analysis/hipo2/hipo_K43R/cellranger_results_v3_GRCh19
-
-Script to generate cellranger output
-    /icgc/dkfzlsdf/analysis/hipo2/hipo_K43R/scripts/cellranger_pipeline/job.arr_cellranger.sh
-
-Input file for the cellranger bash script
-
-    /icgc/dkfzlsdf/analysis/hipo2/hipo_K43R/info_files/HIPO_IDs_Hana_change_final.txt
-
-Read in seurat count matrix by
-
-    SAMPLE/outs/filtered_feature_bc_matrix/
-
-
-### cellSNP
-
-[cellSNP](https://github.com/huangyh09/cellSNP)
-
+## Single-cell Genotyping (to be updated)
