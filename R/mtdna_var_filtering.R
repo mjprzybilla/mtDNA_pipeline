@@ -27,22 +27,26 @@ if(length(args)!=4){
   quit()
 }
 
+# Rscript /home/przybilm/bsub_command/WGS/mtdna_pipeline/mtdna_var_filtering.R /icgc/dkfzlsdf/analysis/B260/projects/przybilm/hipo_067/mtdnaserver /icgc/dkfzlsdf/analysis/B260/projects/przybilm/hipo_067/mtdnaserver/filtered 0.05 0.01
+
 # get input directory containing the output from mtdnaserver
-wdir <- args[1]     # wdir <- "/icgc/dkfzlsdf/analysis/B260/projects/przybilm/stanford/WGS/output/mtdnaserver"
+wdir <- args[1]     # wdir <- "/icgc/dkfzlsdf/analysis/B260/projects/przybilm/hipo_K08K/mtdnaserver/lowVAF"
 
 # set output directory
-odir <- args[2]     # odir <- "/icgc/dkfzlsdf/analysis/B260/projects/przybilm/stanford/WGS/output/mtdnaserver/filtered"
+odir <- args[2]     # odir <- "/icgc/dkfzlsdf/analysis/B260/projects/przybilm/hipo_K08K/mtdnaserver/filtered"
 message(odir)
 dir.create(odir)
 setwd(odir)
 
 # list all files containing variants called with mtdnaserver
 allvarfiles <- list.files(wdir, pattern = "_all.var.txt$", full.names = T)
-allvarfiles <- allvarfiles[-grep("all_patient", allvarfiles)]
+# allvarfiles <- allvarfiles[-grep("all_patient", allvarfiles)]
 
-# set a first threshold for both VAFs and a second one in case there is only one sample
-t1 <- args[3]   # t1 <- 0.5
-t2 <- args[4]  # t2 <- 0.05
+# set thresholds for controls and tumours 
+ctrl_t <- args[3]   # ctrl_t <- 0.05
+message(ctrl_t)
+tumor_t <- args[4]  # tumor_t <- 0.01
+message(tumor_t)
 
 # file <- allvarfiles[1]
 for (file in allvarfiles){
@@ -55,17 +59,17 @@ for (file in allvarfiles){
   table.tmp[is.na(table.tmp)] <- 0
   
   # grep columns that belong to a tumor or a control sample
-  sample1_col <- grep(pattern = "Rep1", colnames(table.tmp),value = T)
-  sample2_col <- grep(pattern = "Rep2", colnames(table.tmp),value = T)
+  tumor_col <- grep(pattern = "tumor", colnames(table.tmp),value = T)
+  control_col <- grep(pattern = "control", colnames(table.tmp),value = T)
   
   # get information about the VAF and the corresponding coverage at the position
-  vcf_sample1_col <- grep(sample1_col,pattern = "_VariantLevel",value = T)
-  vcf_sample2_col <- grep(sample2_col,pattern = "_VariantLevel",value = T)
-  cov_sample1_col <- grep(sample1_col,pattern = "_Coverage",value = T)
-  cov_sample2_col <- grep(sample2_col,pattern = "_Coverage",value = T)
+  vcf_ctrl_col <- grep(control_col,pattern = "_VariantLevel",value = T)
+  vcf_tumor_col <- grep(tumor_col,pattern = "_VariantLevel",value = T)
+  cov_ctrl_col <- grep(control_col,pattern = "_Coverage",value = T)
+  cov_tumor_col <- grep(tumor_col,pattern = "_Coverage",value = T)
   
   # get patient name
-  patient <- paste(str_split_fixed(basename(file), "_", 3)[,1], str_split_fixed(basename(file), "_", 3)[,2], sep = "_")
+  patient <- str_split_fixed(basename(file), "_", 2)[,1]
   
   # i = 1
   keep <- c()
@@ -75,12 +79,12 @@ for (file in allvarfiles){
     pm <- table.tmp[i,]
     
     # get the variant allele frequency of the mutation to apply the filter
-    vafs_sample1 <- as.numeric(pm[,vcf_sample1_col])
-    vafs_sample2 <- as.numeric(pm[,vcf_sample2_col])
+    vafs_ctrl <- as.numeric(pm[,vcf_ctrl_col])
+    vafs_tumor <- as.numeric(pm[,vcf_tumor_col])
     
     # check whether the variants exceed the thresholds
-    if(all(vafs_sample1 <= t1 & vafs_sample2 <= t1)){
-      if(length(which(vafs_sample1 >= t2 | vafs_sample2 >= t2)) >= 1){
+    if(all(vafs_ctrl <= ctrl_t)){
+      if(length(which(vafs_tumor >= tumor_t)) >= 1){
         keep <- c(keep, i) 
       }
     }
@@ -90,7 +94,7 @@ for (file in allvarfiles){
   table_filter <- table.tmp[keep, ]
   
   # write to file
-  write.table(table_filter, paste(odir, "/" , patient, "_", t1, "_", t2, "_filtered.var.txt", sep = ""), 
+  write.table(table_filter, paste(odir, "/" , patient,"_", ctrl_t, "_", tumor_t, "_filtered.var.txt", sep = ""), 
               sep = "\t", row.names = F, quote = F)
 }
 
