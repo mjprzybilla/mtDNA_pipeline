@@ -337,13 +337,13 @@ Ultimately, this is the result which will be used in the second stage of the wor
 
 Within the `~/mtdna_pipeline/R` folder, some scripts for plotting distinct visualizations can be found. For instance, the `var_boxplot.R` script takes the `all_patient_0.05_0.005_filtered.var.txt` file as input an creates the following barplot:
 
-![](Barplot_Mutations_Patients_0.05_0.01.pdf)
+![Mutations Barplot](Barplot_Mutations_Patients_0.05_0.01.pdf)
 
 In addition, a script generating a coverage plot (`plot_mtdna_coverage.R`), showing the coverage across the mitochondrial genome and coverage boxplots for samples of interest (`plot_cov_boxplots.R`) are provided. They take the `filtered_unique_rg` (**Step 5**) mitochondrial bam files as input and generate basic plots similar to this:
 
-![](image.png)
+![Coverage Plot](image.png)
 
-![](Coverage_boxplot.pdf)
+![Coverage Boxplot](Coverage_boxplot.pdf)
 
 ----
 
