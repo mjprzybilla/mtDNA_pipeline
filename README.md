@@ -5,7 +5,7 @@
 
 ----
 
-**E-mail:** przybilla@stud.uni-heidelberg.de
+**E-mail:** przybilla@stud.uni-heidelberg.de  
 **E-mail:** m.przybilla@dkfz-heidelberg.de
 
 ----
@@ -38,7 +38,7 @@ Ludwig et al., as well as others, made use of the fact, that the mitochondrial g
 
 ## Bulk Genotyping
 
-In order to call variants within the mtDNA in bulk WGS, we are using a previously written script from *Na Cai*, who kindly shared it with us. The script is based on the availability of standard bam files containing all sequencing reads from WGS (both for nuclear and mitochondrial genome). The adapted version of Na's script can be found here:
+In order to call variants within the mtDNA in bulk WGS, we adapted a previously written script from *Na Cai*, who kindly shared it. The script assumes the availability of standard `.bam` files containing all sequencing reads from WGS (both for nuclear and mitochondrial genome). The adapted version of Na's script can be found here:
 
 ```bash
 # file path to bash script
